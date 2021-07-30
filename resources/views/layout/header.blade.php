@@ -1,141 +1,255 @@
-@php
-    use GuzzleHttp\Client;
+<?php
+use GuzzleHttp\Client;
+$token = Cookie::get('token');
+if (isset($token) && $token != null) {
     $client = new Client([
         'headers' => [
+        'Authorization' => 'Bearer ' . $token,
         'Content-Type' => 'application/json',
         ],
     ]);
-
-    $databanner = $client->get(\App\Models\BaseModel::URI_API . 'list-banner');
-    $responsebanner = json_decode($databanner->getBody()->getContents(), true);
-
-    if ($responsebanner['status'] == 1) {
-        $listbanner = $responsebanner['data'];
-    } else {
-        alert()->warning($responsebanner['message']);
+    $data = $client->get(\App\Models\BaseModel::URI_API . '/notify/list-notify');
+    $response = json_decode($data->getBody()->getContents(), true);
+    if($response['status']==1){
+        $noti = $response['data'];
     }
 
+}
 
-    $datatitlebanner = $client->get(\App\Models\BaseModel::URI_API . 'list-titlebanner');
-    $responsetitlebanner = json_decode($datatitlebanner->getBody()->getContents(), true);
+?>
+<nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
 
-    if ($responsetitlebanner['status'] == 1) {
-        $listtitlebanner = $responsetitlebanner['data'];
-    } else {
-        alert()->warning($responsetitlebanner['message']);
-    }
+    <!-- Sidebar Toggle (Topbar) -->
+    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+        <i class="fa fa-bars"></i>
+    </button>
 
-@endphp
+    <!-- Topbar Search -->
+    {{-- <form class="d-none d-sm-inline-block form-inline mr-auto ml-md-3 my-2 my-md-0 mw-100 navbar-search">
+        <div class="input-group">
+            <input type="text" class="form-control bg-light border-0 small" placeholder="Search for..."
+                aria-label="Search" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="button">
+                    <i class="fas fa-search fa-sm"></i>
+                </button>
+            </div>
+        </div>
+    </form> --}}
 
-<div class="loader"></div>
+    <!-- Topbar Navbar -->
+    <ul class="navbar-nav ml-auto">
 
-
-    <!--======== SEARCH-OVERLAY =========-->
-    <div class="overlay">
-        <a href="javascript:void(0)" id="close-button" class="closebtn">&times;</a>
-        <div class="overlay-content">
-            <div class="form-center">
-                <form>
-                    <div class="form-group">
-                        <div class="input-group">
-                            <input type="text" class="form-control" placeholder="Search..." required />
-                            <span class="input-group-btn"><button type="submit" class="btn"><span><i
-                                            class="fa fa-search"></i></span></button></span>
-                        </div><!-- end input-group -->
-                    </div><!-- end form-group -->
-                </form>
-            </div><!-- end form-center -->
-        </div><!-- end overlay-content -->
-    </div><!-- end overlay -->
-
-
-    <!--============= TOP-BAR ===========-->
-    <div id="top-bar" class="tb-text-white">
-    </div><!-- end top-bar -->
-
-
-    <!--========================= FLEX SLIDER =====================-->
-    <section class="flexslider-container" id="flexslider-container-6">
-
-        <div class="header-absolute">
-            <nav class="navbar navbar-default main-navbar navbar-custom navbar-transparent landing-page-navbar"
-                id="mynavbar">
-                <div class="container">
-                    <div class="navbar-header">
-                        <a href="/" class="navbar-brand" style="padding-top:8px;"><img src="{{ asset('img/logo2.jpg') }}" alt=""
-                            style="width:60%;"></a>
-                        <button type="button" class="navbar-toggle" id="menu-button">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </button>
-                        <div class="header-search hidden-lg">
-                            <a href="javascript:void(0)" class="search-button"><span><i
-                                        class="fas fa-search"></i></span></a>
+        <!-- Nav Item - Alerts -->
+        <li class="nav-item dropdown no-arrow mx-1">
+            <a class="nav-link dropdown-toggle" href="#" id="alertsDropdown" role="button" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <i class="fas fa-bell fa-fw"></i>
+                <!-- Counter - Alerts -->
+                <span class="badge badge-danger badge-counter">{{$noti['count_notify']}}</span>
+            </a>
+            <!-- Dropdown - Alerts -->
+            <div class="dropdown-list dropdown-menu dropdown-menu-right shadow animated--grow-in"
+                aria-labelledby="alertsDropdown" >
+                <div style="height: 500px; width: 105%;
+                overflow-x: auto;">
+                <h6 class="dropdown-header">
+                    Thông báo!
+                </h6>
+                @foreach ($noti['list_notify']['data'] as $item)
+                @php
+                    if ($item['is_view'] == 1) {
+                        $class = '';
+                    } else {
+                        $class = 'font-weight-bold';
+                     }
+                @endphp
+                <form action="{{ route('notify') }}" method="post">
+                    @csrf
+                    <button class="dropdown-item d-flex align-items-center" type="submit">
+                        <input type="hidden" value="{{ $item['id'] }}" name="notify_id" id="{{ $item['id'] }}">
+                        <div class="mr-3">
+                            <div class="icon-circle bg-primary">
+                                <i class="fas fa-file-alt text-white"></i>
+                            </div>
                         </div>
-                       
-                    </div><!-- end navbar-header -->
-
-                    <div class="collapse navbar-collapse" id="myNavbar1">
-                        <ul class="nav navbar-nav navbar-right">
-                            <li><a href="/">TRANG CHỦ</a></li>
-                            <li><a href="{{asset('san-pham/page=1')}}">SẢN PHẨM</a></li>
-                            <li><a href="{{asset('khuyen-mai')}}">KHUYẾN MẠI</a></li>
-                            <li><a href="{{asset('chinh-sach-kinh-doanh')}}">CHÍNH SÁCH KINH DOANH</a></li>
-                            <li><a href="{{asset('su-kien/page=1')}}">SỰ KIỆN</a></li>
-                            <li></li>
-                        </ul>
-                    </div><!-- end navbar collapse -->
-                </div><!-- end container -->
-            </nav><!-- end navbar -->
-        </div><!-- end header-absolute -->
-
-        <div class="sidenav-content">
-            <div id="mySidenav" class="sidenav">
-                <h2 id="web-name"><span><i class="fa fa-home"></i></span>Việt Nam 24H</h2>
-
-                <div id="main-menu">
-                    <div class="closebtn">
-                        <button class="btn btn-default" id="closebtn">&times;</button>
-                    </div><!-- end close-btn -->
-
-                    <div class="list-group landing-page-navbar">
-
-                        <a href="/" class="list-group-item"><span><i
-                                    class="fa fa-home link-icon"></i></span>TRANG CHỦ</a>
-                        <a href="{{asset('san-pham/page=1')}}" class="list-group-item"><span><i
-                                    class="fa fa-plane link-icon"></i></span>SẢN PHẨM</a>
-                        <a href="{{asset('khuyen-mai')}}" class="list-group-item"><span><i
-                                    class="fa fa-building link-icon"></i></span>KHUYẾN MÃI</a>
-                        <a href="{{asset('chinh-sach-kinh-doanh')}}" class="list-group-item"><span><i
-                                    class="fa fa-car link-icon"></i></span>CHÍNH SÁCH KINH DOANH</a>
-                        <a href="{{asset('su-kien/page=1')}}" class="list-group-item"><span><i
-                                    class="fa fa-globe link-icon"></i></span>SỰ KIỆN</a>
-
-                    </div><!-- end list-group -->
-                </div><!-- end main-menu -->
-            </div><!-- end mySidenav -->
-        </div><!-- end sidenav-content -->
-
-        <div class="flexslider slider tour-slider" id="slider-6">
-            <ul class="slides">
-                @foreach ($listbanner as $item)
-                <li class="item-1 back-size" style="background:url({{ $item['image'] }}); background-size:cover; height:100%;">
-                    <div class="meta">
-                        <div class="container" style="margin-top:-100px">
-
-                            <div style="width: 52%; line-height: normal; text-align: left; font-size:40px; color:white;">{{$listtitlebanner[0]['title']}}</div>
-                            <div style="width: 58%; line-height: normal; margin-top: 30px; text-align: left; font-size:18px; color:white; font-weight:100">{!! $listtitlebanner[0]['content'] !!}</div>
-
-                        </div><!-- end container -->
-                    </div><!-- end meta -->
-                    {{-- <div>
-                        <img src="{{ asset('img/milk.png') }}"
-                            style="width: 55%; item-align: left; margin: 0px 0px auto auto;">
-                    </div> --}}
-                </li><!-- end item-1 -->
+                        <div>
+                            <div class="small text-gray-500">{{$item['created_at']}}</div>
+                            <span class="{{$class}}">{!!$item['content']!!}</span>
+                        </div>
+                    </button>
+                </form>
                 @endforeach
-            </ul>
-        </div><!-- end slider -->
-    </section><!-- end flexslider-container -->
+                
+                <a class="dropdown-item text-center small text-gray-500" href="{{asset('thong-bao/page=1')}}">Xem thêm</a>
+            </div>
+        </div>
+        </li>
 
+
+
+        <div class="topbar-divider d-none d-sm-block"></div>
+        @php
+            if (isset($infor)) {
+                $name = $infor['name'];
+                $phone = $infor['phone'];
+                $cmt = $infor['cmt'];
+                $address = $infor['address'];
+                $stt = $infor['code_branch'] . '-' . $infor['code_ordinal'];
+            } else {
+                $name = '';
+                $phone = '';
+                $cmt = '';
+                $address = '';
+                $stt = '';
+            }
+        @endphp
+        <!-- Nav Item - User Information -->
+        <li class="nav-item dropdown no-arrow">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown"
+                aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ $name }}</span>
+                <img class="img-profile rounded-circle" src="{{ asset('img/undraw_profile.svg') }}">
+            </a>
+            <!-- Dropdown - User Information -->
+            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                <a class="dropdown-item" data-toggle="modal" data-target="#profileModal" style="cursor: pointer;">
+                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Thông tin CTV
+                </a>
+                <a class="dropdown-item" data-toggle="modal" data-target="#passModal" style="cursor: pointer;">
+                    <i class="fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Đổi mật khẩu
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="{{ route('logout') }}">
+                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                    Đăng xuất
+                </a>
+            </div>
+        </li>
+
+    </ul>
+
+
+</nav>
+
+<div class="modal fade" id="profileModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="p-5">
+                        <div class="text-center">
+                            <h1 class="h4 text-gray-900 mb-4">Thông tin CTV</h1>
+                        </div>
+                        <form class="user" method="put" action="{{ route('updateCTV') }}">
+                            @csrf
+                            @method('PUT')
+                            <div class="form-group">
+                                <label for="">Họ và tên</label>
+                                <input type="text" class="form-control form-control-user" id="" name="name"
+                                    value="{{ $name }}">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Số điện thoại</label>
+                                <input type="text" class="form-control form-control-user" id="" name="phone"
+                                    value="{{ $phone }}" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="">Địa chỉ</label>
+                                <input type="text" class="form-control form-control-user" id="exampleInputEmail"
+                                    value="{{ $address }}" name="address">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Mã STT</label>
+                                <input type="text" class="form-control form-control-user" id=""
+                                    value="{{ $stt }}" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label for="">Chứng minh thư</label>
+                                <input type="text" class="form-control form-control-user" id=""
+                                    value="{{ $cmt }}" name="cmt">
+                            </div>
+                            <div class="form-group" style="position: relative;">
+                                <label for="">Link giới thiệu</label>
+                                <input type="text" class="form-control form-control-user" id="linkgt" readonly
+                                    value="{{ asset('dang-ki?key=' . base64_encode($cmt)) }}"><i
+                                    class="fas fa-fw fa-paste" style="right: 15px;
+                                                        position: absolute;
+                                                        top: 45px; cursor: pointer;" onclick="copytext();"></i>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" type="button" data-dismiss="modal">Đóng</button>
+                                <button type="submit" class="btn btn-primary"><a>Chỉnh sửa</a></button>
+                            </div>
+
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="passModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="p-5">
+                        <div class="text-center">
+                            <h1 class="h4 text-gray-900 mb-4">Đổi mật khẩu</h1>
+                        </div>
+                        <form class="user" method="put" action="{{ route('PassCTV') }}">
+                            @csrf
+                            @method('PUT')
+                            <div class="form-group">
+                                <label for="">mật khẩu hiện tại</label>
+                                <input type="password" class="form-control form-control-user" id=""
+                                    name="current_password" value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Mật khẩu mới</label>
+                                <input type="password" class="form-control form-control-user" id="" name="password"
+                                    value="">
+                            </div>
+                            <div class="form-group">
+                                <label for="">Xác nhận mật khẩu</label>
+                                <input type="password" class="form-control form-control-user" id=""
+                                    name="password_confirmation" value="">
+                            </div>
+
+                            <div class="modal-footer">
+                                <button class="btn btn-secondary" type="button" data-dismiss="modal">Hủy</button>
+                                <button type="submit" class="btn btn-primary"><a>Chỉnh sửa</a></button>
+                            </div>
+
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<script>
+    function copytext() {
+        var copyText = document.getElementById("linkgt");
+        copyText.select();
+        copyText.setSelectionRange(0, 99999)
+        document.execCommand("copy");
+    }
+
+</script>
